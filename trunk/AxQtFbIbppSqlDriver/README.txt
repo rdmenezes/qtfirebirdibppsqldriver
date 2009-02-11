@@ -9,7 +9,7 @@ Installation
 Download is available from http://code.google.com/p/qtfirebirdibppsqldriver/, the official website.
 
 You need :
-- Qt (from Nokia) at least version 4.* to be able to compile QtFirebirdIBPPSQLDriver. M
+- Qt (from Nokia) at least version 4.* to be able to compile QtFirebirdIBPPSQLDriver.
 - IBPP, a C++ Client Interface to Firebird Server. http://www.ibpp.org
 - Firebird  at least version 1.5.*. http://firebirdsql.org
 
