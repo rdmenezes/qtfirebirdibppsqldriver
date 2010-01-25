@@ -1,6 +1,6 @@
     QtFirebirdIBPPSQLDriver - Qt SQL driver for Firebird with IBPP library
 
-    (C) 2006-2009 Alex Wencel <alex.wencel@gmail.com>
+    (C) 2006-2010 Alex Wencel <alex.wencel@gmail.com>
 
 Installation
 ~~~~~~~~~~~

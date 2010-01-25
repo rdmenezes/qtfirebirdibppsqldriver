@@ -1,6 +1,6 @@
 /*
 * This file is part of QtFirebirdIBPPSQLDriver - Qt SQL driver for Firebird with IBPP library
-* Copyright (C) 2006-2009 Alex Wencel
+* Copyright (C) 2006-2010 Alex Wencel
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -525,6 +525,7 @@ bool QFBResult::exec()
     }
     catch (IBPP::Exception& e)
     {
+        Q_UNUSED(e);
         paramCount = 0;
     }
 
@@ -598,7 +599,7 @@ bool QFBResult::exec()
                     std::string  ss;
                     QByteArray ba = val.toByteArray();
                     ss.resize(ba.size());
-                    ss.assign(ba.constData());
+                    ss.assign(ba.constData(), ba.size());
                     rp->iSt->Set(i,ss);
                     break;
                 }
@@ -632,10 +633,14 @@ bool QFBResult::exec()
         cols = rp->iSt->Columns();
     }
     catch (IBPP::Exception& e)
-    {}
+    {
+        Q_UNUSED(e);
+    }
 
-//	if (cols)
-    init(cols);
+    if (cols > 0)
+        init(cols);
+    else
+        cleanup();
 
     if (! rp->isSelect())
         rp->commit();
@@ -681,7 +686,9 @@ bool QFBResult::gotoNext(QSqlCachedResult::ValueCache& row, int rowIdx)
         cols = rp->iSt->Columns();
     }
     catch (IBPP::Exception& e)
-    {}
+    {
+        Q_UNUSED(e);
+    }
 
     for (int i = 1; i <= cols; ++i)
     {
@@ -818,7 +825,9 @@ int QFBResult::size()
         nra = rp->iSt->AffectedRows();
     }
     catch (IBPP::Exception& e)
-    {}
+    {
+        Q_UNUSED(e);
+    }
     return nra;
 }
 //-----------------------------------------------------------------------//
@@ -833,7 +842,9 @@ int QFBResult::numRowsAffected()
         nra = rp->iSt->AffectedRows();
     }
     catch (IBPP::Exception& e)
-    {}
+    {
+        Q_UNUSED(e);
+    }
     return nra;
 }
 //-----------------------------------------------------------------------//
@@ -849,7 +860,9 @@ QSqlRecord QFBResult::record() const
         cols = rp->iSt->Columns();
     }
     catch (IBPP::Exception& e)
-    {}
+    {
+        Q_UNUSED(e);
+    }
     for (int i = 1; i <= cols; ++i)
     {
 
@@ -894,17 +907,14 @@ bool QFBDriver::hasFeature(DriverFeature f) const
 {
     switch (f)
     {
-    case QuerySize:
-    case NamedPlaceholders:
-    case LastInsertId:
-    case BatchOperations:
-        return false;
     case Transactions:
     case PreparedQueries:
     case PositionalPlaceholders:
     case Unicode:
     case BLOB:
         return true;
+    default:
+        return false;
     }
     return false;
 }
@@ -917,7 +927,8 @@ bool QFBDriver::open(const QString & db,
                      const QString & connOpts )
 {
 
-    QString charSet = QLatin1String("WIN1251");
+    QString charSet = QLatin1String("NONE");
+    QString role = QLatin1String("");
 
     // Set connection attributes
     const QStringList opts(connOpts.split(QLatin1Char(';'), QString::SkipEmptyParts));
@@ -937,16 +948,11 @@ bool QFBDriver::open(const QString & db,
 
         if (opt == QLatin1String("CHARSET"))
         {
-            if ((val == QLatin1String("NONE")) || (val == QLatin1String("WIN1251")))
-            {
-                charSet = val;
-            }
-            else
-            {
-                qWarning("QFBDriver::open: Unknown option value '%s'",
-                         tmp.toLocal8Bit().constData());
-                continue;
-            }
+            charSet = val;
+        }
+        else if (opt == QLatin1String("ROLE"))
+        {
+            role = val;
         }
         else
         {
@@ -969,15 +975,17 @@ bool QFBDriver::open(const QString & db,
         dp->iDb=IBPP::DatabaseFactory(host.toStdString(),
                                       db.toStdString(),
                                       user.toStdString(),
-                                      password.toStdString(),"",
-                                      charSet.toStdString(),"");
+                                      password.toStdString(),
+                                      role.toStdString(),
+                                      charSet.toStdString(),
+                                      "");
 
         dp->iDb->Connect();
 
     }
     catch (IBPP::Exception& e)
     {
-        setOpenError(TRUE);
+        setOpenError(true);
         dp->setError("Unable to connect", e, QSqlError::ConnectionError);
         return false;
     }

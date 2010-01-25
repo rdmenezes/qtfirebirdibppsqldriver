@@ -1,3 +1,12 @@
+January 25, 2010: 0.14
+- fixed ASSERTION in qsqlcachedresult when calling stored procedure (Issue 1)
+- fixed bug when blob contains '\0' char (Issue 2)
++ Add support of firebird ROLE (Issue 3)
++ change in IbppDriver.pro for  support debug and release builds (Issue 4)
+- fixed bug when only "NONE" and "WIN1251" charset is set (Issue 5)
+  NOTE: Default charset set to "NONE" 
+- compile warnings
+
 February 11, 2009: 0.13
 - change in ibpp.pri for compile with Microsoft compilers
 - test with Qt 4.5rc1 
