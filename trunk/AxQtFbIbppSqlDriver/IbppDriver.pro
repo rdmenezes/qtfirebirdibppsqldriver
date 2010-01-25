@@ -4,14 +4,25 @@ CONFIG +=   qt \
 QT +=   core \
   sql
 DEFINES			-= UNICODE 
-QT -=   gui # +=   GUI
+QT -=   gui # -=   GUI
 TEMPLATE =   lib
-DESTDIR +=   bin
+
+CONFIG(debug, debug|release) {
+	DESTDIR = bin/debug
+  OBJECTS_DIR = build/debug
+	MOC_DIR = build/debug
+	RCC_DIR = build/debug
+	UI_DIR = build/debug
+} else {
+  DESTDIR = bin/release
+  OBJECTS_DIR = build/release
+	MOC_DIR = build/release
+	RCC_DIR = build/release
+	UI_DIR = build/release
+}
+
 TARGET =   qsqlfirebird
-MOC_DIR +=   build
-OBJECTS_DIR +=   build
-RCC_DIR +=   build
-UI_DIR +=   build
+
 DEFINES +=   QT_NO_CAST_TO_ASCII \
   QT_NO_CAST_FROM_ASCII
 HEADERS +=   src/qsql_ibpp.h \

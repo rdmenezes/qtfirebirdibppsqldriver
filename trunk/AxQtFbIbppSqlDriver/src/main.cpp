@@ -1,6 +1,6 @@
 /*
 * This file is part of QtFirebirdIBPPSQLDriver - Qt SQL driver for Firebird with IBPP library
-* Copyright (C) 2006-2009 Alex Wencel
+* Copyright (C) 2006-2010 Alex Wencel
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by

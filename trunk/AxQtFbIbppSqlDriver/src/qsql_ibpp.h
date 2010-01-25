@@ -1,6 +1,6 @@
 /*
 * This file is part of QtFirebirdIBPPSQLDriver - Qt SQL driver for Firebird with IBPP library
-* Copyright (C) 2006-2009 Alex Wencel
+* Copyright (C) 2006-2010 Alex Wencel
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -76,7 +76,8 @@ public:
             const QString & user,
             const QString & password,
             const QString & host,
-            int port) { return open (db, user, password, host, port, QString()); }
+            int port)
+        { return open (db, user, password, host, port, QString()); }
     void close();
     QSqlResult *createResult() const;
     bool beginTransaction();
