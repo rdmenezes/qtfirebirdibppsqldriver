@@ -5,7 +5,6 @@
 Installation
 ~~~~~~~~~~~
 
-
 Download is available from http://code.google.com/p/qtfirebirdibppsqldriver/, the official website.
 
 You need :
@@ -28,18 +27,35 @@ The simplest way to compile (QtFirebirdIBPPSQLDriver) package is:
 
 Documentation
 ~~~~~~~~~~~~~
+
+The format of the options string is a semicolon separated list of option=value pairs.
+	CHARSET - character set
+	ROLE - role name
+
+// QFIREBIRD connection
+	db.setConnectOptions("CHARSET=WIN1251;ROLE=ROOT");
 .........
 
 License
 ~~~~~~~~~~~~~
 
-Copyright (C) 2006-2009 Alex Wencel <alex.wencel@gmail.com>
+Copyright (C) 2006-2010 Alex Wencel
 
-QtFirebirdIBPPSQLDriver is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License as published by the Free Software
-Foundation; either version 2 of the License, or (at your option) any later
-version.
+Contact e-mail: Alex Wencel <alex.wencel@gmail.com>
+Program URL   : http://code.google.com/p/qtfirebirdibppsqldriver
 
-This program is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+GNU Lesser General Public License Usage
+This file may be used under the terms of the GNU Lesser
+General Public License version 2.1 as published by the Free Software
+Foundation and appearing in the file LICENSE.LGPL included in the
+packaging of this file.  Please review the following information to
+ensure the GNU Lesser General Public License version 2.1 requirements
+will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+
+GNU General Public License Usage
+Alternatively, this file may be used under the terms of the GNU
+General Public License version 3.0 as published by the Free Software
+Foundation and appearing in the file LICENSE.GPL included in the
+packaging of this file.  Please review the following information to
+ensure the GNU General Public License version 3.0 requirements will be
+met: http://www.gnu.org/copyleft/gpl.html.

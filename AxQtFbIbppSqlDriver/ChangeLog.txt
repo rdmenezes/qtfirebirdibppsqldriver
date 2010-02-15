@@ -1,3 +1,8 @@
+February 15, 2010: 0.15
+- fixed Produce different targets depengind on config (Debug Release) (Issue 6)
++ license under LGPL version 2.1
++ license under GPL version 3.0
+
 January 25, 2010: 0.14
 - fixed ASSERTION in qsqlcachedresult when calling stored procedure (Issue 1)
 - fixed bug when blob contains '\0' char (Issue 2)
