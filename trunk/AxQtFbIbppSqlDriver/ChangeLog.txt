@@ -1,3 +1,6 @@
+February 26, 2010: 0.16
+- fixed NUMERIC and DECIMAL fields with small length return wrong value (Issue 7)
+
 February 15, 2010: 0.15
 - fixed Produce different targets depengind on config (Debug Release) (Issue 6)
 + license under LGPL version 2.1
