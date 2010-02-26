@@ -140,7 +140,6 @@ static IBPP::Timestamp toIBPPTimeStamp(const QDateTime &dt)
 //-----------------------------------------------------------------------//
 static QDateTime fromIBPPTimeStamp(IBPP::Timestamp &dt)
 {
-
     int y,m,d,h,min,s,ms;
     dt.GetDate(y,m,d);
     dt.GetTime(h,min,s,ms);
@@ -567,33 +566,39 @@ bool QFBResult::exec()
             {
             case IBPP::sdLargeint:
                 if (rp->iSt->ParameterScale(i))
-                    rp->iSt->Set(i,val.toDouble());
+                    rp->iSt->Set(i, val.toDouble());
                 else
-                    rp->iSt->Set(i,val.toLongLong());
+                    rp->iSt->Set(i, val.toLongLong());
                 break;
             case IBPP::sdInteger:
-                rp->iSt->Set(i,val.toInt());
+                if (rp->iSt->ParameterScale(i))
+                    rp->iSt->Set(i, val.toDouble());
+                else
+                    rp->iSt->Set(i, val.toInt());
                 break;
             case IBPP::sdSmallint:
-                rp->iSt->Set(i,(short)val.toInt());
+                if (rp->iSt->ParameterScale(i))
+                    rp->iSt->Set(i, val.toDouble());
+                else
+                    rp->iSt->Set(i, (short)val.toInt());
                 break;
             case IBPP::sdFloat:
-                rp->iSt->Set(i,(float)val.toDouble());
+                rp->iSt->Set(i, (float)val.toDouble());
                 break;
             case IBPP::sdDouble:
-                rp->iSt->Set(i,val.toDouble());
+                rp->iSt->Set(i, val.toDouble());
                 break;
             case IBPP::sdTimestamp:
-                rp->iSt->Set(i,toIBPPTimeStamp(val.toDateTime()));
+                rp->iSt->Set(i, toIBPPTimeStamp(val.toDateTime()));
                 break;
             case IBPP::sdTime:
-                rp->iSt->Set(i,toIBPPTime(val.toTime()));
+                rp->iSt->Set(i, toIBPPTime(val.toTime()));
                 break;
             case IBPP::sdDate:
-                rp->iSt->Set(i,toIBPPDate(val.toDate()));
+                rp->iSt->Set(i, toIBPPDate(val.toDate()));
                 break;
             case IBPP::sdString:
-                rp->iSt->Set(i,toIBPPStr(val.toString()));
+                rp->iSt->Set(i, toIBPPStr(val.toString()));
                 break;
             case IBPP::sdBlob:
                 {
@@ -601,7 +606,7 @@ bool QFBResult::exec()
                     QByteArray ba = val.toByteArray();
                     ss.resize(ba.size());
                     ss.assign(ba.constData(), ba.size());
-                    rp->iSt->Set(i,ss);
+                    rp->iSt->Set(i, ss);
                     break;
                 }
             case IBPP::sdArray:
@@ -729,23 +734,34 @@ bool QFBResult::gotoNext(QSqlCachedResult::ValueCache& row, int rowIdx)
             }
         case IBPP::sdSmallint:
             {
-                short l_Short;
-                rp->iSt->Get(i, l_Short);
-                row[idx] =l_Short;
+                if (rp->iSt->ColumnScale(i))
+                {
+                    double l_Double;
+                    rp->iSt->Get(i, l_Double);
+                    row[idx] = l_Double;
+                }
+                else
+                {
+                    short l_Short;
+                    rp->iSt->Get(i, l_Short);
+                    row[idx] =l_Short;
+                }
                 break;
             }
         case IBPP::sdInteger:
             {
-                int l_Integer;
-                rp->iSt->Get(i, l_Integer);
-                row[idx] = l_Integer;
-                break;
-            }
-        case IBPP::sdFloat:
-            {
-                float l_Float;
-                rp->iSt->Get(i, l_Float);
-                row[idx] = l_Float;
+                if (rp->iSt->ColumnScale(i))
+                {
+                    double l_Double;
+                    rp->iSt->Get(i, l_Double);
+                    row[idx] = l_Double;
+                }
+                else
+                {
+                    int l_Integer;
+                    rp->iSt->Get(i, l_Integer);
+                    row[idx] = l_Integer;
+                }
                 break;
             }
         case IBPP::sdLargeint:
@@ -763,6 +779,13 @@ bool QFBResult::gotoNext(QSqlCachedResult::ValueCache& row, int rowIdx)
                     row[idx] = l_Long;
 
                 }
+                break;
+            }
+        case IBPP::sdFloat:
+            {
+                float l_Float;
+                rp->iSt->Get(i, l_Float);
+                row[idx] = l_Float;
                 break;
             }
         case IBPP::sdDouble:
