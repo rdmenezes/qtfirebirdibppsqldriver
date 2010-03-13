@@ -34,13 +34,14 @@ QT_BEGIN_HEADER
 class QFBDriverPrivate;
 class QFBResultPrivate;
 class QFBDriver;
+class QTextCodec;
 
 class QFBResult : public QSqlCachedResult
 {
     friend class QFBResultPrivate;
 
 public:
-    explicit QFBResult(const QFBDriver* db);
+    explicit QFBResult(const QFBDriver *db, QTextCodec *tc);
     virtual ~QFBResult();
 
     bool prepare(const QString& query);

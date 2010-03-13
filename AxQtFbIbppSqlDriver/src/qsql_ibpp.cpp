@@ -23,6 +23,7 @@
 *
 */
 
+#include <QtDebug>
 #include <QTextCodec>
 #include <qdatetime.h>
 #include <qvariant.h>
@@ -119,14 +120,21 @@ static QVariant::Type qIBPPTypeName(int iType)
     }
 }
 //-----------------------------------------------------------------------//
-static std::string toIBPPStr(const QString &s)
+static std::string toIBPPStr(const QString &s, const QTextCodec *textCodec)
 {
-    return std::string(QTextCodec::codecForName("CP1251")->fromUnicode((s)));
+    if (!textCodec)
+        return s.toStdString();
+
+    QByteArray ba = textCodec->fromUnicode(s);
+    return std::string(ba.constData(), ba.size());
 }
 //-----------------------------------------------------------------------//
-static QString fromIBPPStr(std::string &s)
+static QString fromIBPPStr(std::string &s, const QTextCodec *textCodec)
 {
-    return QTextCodec::codecForName("CP1251")->toUnicode((s.data())).trimmed();
+    if (!textCodec)
+        return QString::fromStdString(s);
+
+    return textCodec->toUnicode(s.data(), s.size()).trimmed();
 }
 //-----------------------------------------------------------------------//
 static IBPP::Timestamp toIBPPTimeStamp(const QDateTime &dt)
@@ -179,7 +187,9 @@ static QDate fromIBPPDate(IBPP::Date &id)
 class QFBDriverPrivate
 {
 public:
-    QFBDriverPrivate(QFBDriver *dd) : d(dd)
+    QFBDriverPrivate(QFBDriver *dd)
+        : d(dd)
+        , textCodec(0)
     {
         iDb.clear();
         iTr.clear();
@@ -203,7 +213,8 @@ public:
     IBPP::TLR tlr;
     IBPP::TFF tff;
 
-    QFBDriver* d;
+    QFBDriver *d;
+    QTextCodec *textCodec;
 };
 //-----------------------------------------------------------------------//
 void QFBDriverPrivate::setError(const std::string &err, IBPP::Exception &e, QSqlError::ErrorType type)
@@ -315,7 +326,7 @@ void QFBDriverPrivate::checkTransactionArguments()
 class QFBResultPrivate
 {
 public:
-    QFBResultPrivate(QFBResult *rr, const QFBDriver *dd);
+    QFBResultPrivate(QFBResult *rr, const QFBDriver *dd, QTextCodec *tc);
     ~QFBResultPrivate()
     {
         cleanup();
@@ -341,10 +352,12 @@ public:
     IBPP::Database iDb;
     IBPP::Transaction iTr;
     IBPP::Statement iSt;
+
+    QTextCodec *textCodec;
 };
 //-----------------------------------------------------------------------//
-QFBResultPrivate::QFBResultPrivate(QFBResult *rr, const QFBDriver *dd):
-        r(rr), d(dd), queryType(-1)
+QFBResultPrivate::QFBResultPrivate(QFBResult *rr, const QFBDriver *dd, QTextCodec *tc):
+        r(rr), d(dd), queryType(-1), textCodec(tc)
 {
     localTransaction = true;
     iDb = dd->dp->iDb;
@@ -460,10 +473,10 @@ bool QFBResultPrivate::commit()
     return true;
 }
 //-----------------------------------------------------------------------//
-QFBResult::QFBResult(const QFBDriver* db):
+QFBResult::QFBResult(const QFBDriver *db, QTextCodec *tc):
         QSqlCachedResult(db)
 {
-    rp = new QFBResultPrivate(this, db);
+    rp = new QFBResultPrivate(this, db, tc);
 }
 //-----------------------------------------------------------------------//
 QFBResult::~QFBResult()
@@ -489,7 +502,7 @@ bool QFBResult::prepare(const QString& query)
 
     try
     {
-        rp->iSt->Prepare(toIBPPStr(query));
+        rp->iSt->Prepare(toIBPPStr(query, rp->textCodec));
     }
     catch (IBPP::Exception& e)
     {
@@ -598,7 +611,7 @@ bool QFBResult::exec()
                 rp->iSt->Set(i, toIBPPDate(val.toDate()));
                 break;
             case IBPP::sdString:
-                rp->iSt->Set(i, toIBPPStr(val.toString()));
+                rp->iSt->Set(i, toIBPPStr(val.toString(), rp->textCodec));
                 break;
             case IBPP::sdBlob:
                 {
@@ -646,9 +659,9 @@ bool QFBResult::exec()
     if (cols > 0)
         init(cols);
     else
-        cleanup();
+        cleanup(); // cleanup
 
-    if (! rp->isSelect())
+    if (!rp->isSelect())
         rp->commit();
 
     setActive(true);
@@ -799,7 +812,7 @@ bool QFBResult::gotoNext(QSqlCachedResult::ValueCache& row, int rowIdx)
             {
                 std::string l_String;
                 rp->iSt->Get(i, l_String);
-                row[idx] = fromIBPPStr(l_String);
+                row[idx] = fromIBPPStr(l_String, rp->textCodec);
                 break;
             }
         case IBPP::sdArray:
@@ -908,7 +921,7 @@ QVariant QFBResult::handle() const
 //-----------------------------------------------------------------------//
 //-----------------------------------------------------------------------//
 QFBDriver::QFBDriver(QObject * parent)
-        : QSqlDriver(parent)
+    : QSqlDriver(parent)
 {
     dp = new QFBDriverPrivate(this);
 }
@@ -972,7 +985,7 @@ bool QFBDriver::open(const QString & db,
 
         if (opt == QLatin1String("CHARSET"))
         {
-            charSet = val;
+            charSet = val.toUpper();
         }
         else if (opt == QLatin1String("ROLE"))
         {
@@ -994,6 +1007,82 @@ bool QFBDriver::open(const QString & db,
     if (isOpen())
         close();
 
+//    set textCodec
+    QByteArray codecName;
+    if (charSet == QLatin1String("ASCII"))
+        codecName = "IBM 866";
+    else if (charSet == QLatin1String("BIG_5"))
+        codecName = "Big5";
+    else if (charSet == QLatin1String("CYRL"))
+        codecName = "KOI8-R";
+    else if (charSet == QLatin1String("DOS850"))
+        codecName = "IBM 850";
+    else if (charSet == QLatin1String("DOS866"))
+        codecName = "IBM 866";
+    else if (charSet == QLatin1String("EUCJ_0208"))
+        codecName = "JIS X 0208";
+    else if (charSet == QLatin1String("GB_2312"))
+        codecName = "GB18030-0";
+
+    else if (charSet == QLatin1String("ISO8859_1"))
+        codecName = "ISO 8859-1";
+    else if (charSet == QLatin1String("ISO8859_2"))
+        codecName = "ISO 8859-2";
+    else if (charSet == QLatin1String("ISO8859_3"))
+        codecName = "ISO 8859-3";
+    else if (charSet == QLatin1String("ISO8859_4"))
+        codecName = "ISO 8859-4";
+    else if (charSet == QLatin1String("ISO8859_5"))
+        codecName = "ISO 8859-5";
+    else if (charSet == QLatin1String("ISO8859_6"))
+        codecName = "ISO 8859-6";
+    else if (charSet == QLatin1String("ISO8859_7"))
+        codecName = "ISO 8859-7";
+    else if (charSet == QLatin1String("ISO8859_8"))
+        codecName = "ISO 8859-8";
+    else if (charSet == QLatin1String("ISO8859_9"))
+        codecName = "ISO 8859-9";
+    else if (charSet == QLatin1String("ISO8859_13"))
+        codecName = "ISO 8859-13";
+
+    else if (charSet == QLatin1String("KSC_5601"))
+        codecName = "Big5-HKSCS";
+    else if (charSet == QLatin1String("SJIS_0208"))
+        codecName = "JIS X 0208";
+    else if (charSet == QLatin1String("UNICODE_FSS"))
+        codecName = "UTF-32";
+    else if (charSet == QLatin1String("UTF8"))
+        codecName = "UTF-8";
+
+    else if (charSet == QLatin1String("WIN1250"))
+        codecName = "Windows-1250";
+    else if (charSet == QLatin1String("WIN1251"))
+        codecName = "Windows-1251";
+    else if (charSet == QLatin1String("WIN1252"))
+        codecName = "Windows-1252";
+    else if (charSet == QLatin1String("WIN1253"))
+        codecName = "Windows-1253";
+    else if (charSet == QLatin1String("WIN1254"))
+        codecName = "Windows-1254";
+    else if (charSet == QLatin1String("WIN1255"))
+        codecName = "Windows-1255";
+    else if (charSet == QLatin1String("WIN1256"))
+        codecName = "Windows-1256";
+    else if (charSet == QLatin1String("WIN1257"))
+        codecName = "Windows-1257";
+    else if (charSet == QLatin1String("WIN1258"))
+        codecName = "Windows-1258";
+    else if (charSet == QLatin1String("WIN1258"))
+        codecName = "Windows-1258";
+
+    if (codecName.isEmpty())
+        dp->textCodec = QTextCodec::codecForName(charSet.toLatin1()); //try codec with charSet
+    else
+        dp->textCodec = QTextCodec::codecForName(codecName);
+
+    if (!dp->textCodec)
+        dp->textCodec = QTextCodec::codecForLocale(); //if unknown set locale
+    qDebug()<<dp->textCodec->name();
     try
     {
         dp->iDb=IBPP::DatabaseFactory(host.toStdString(),
@@ -1041,7 +1130,7 @@ void QFBDriver::close()
 //-----------------------------------------------------------------------//
 QSqlResult *QFBDriver::createResult() const
 {
-    return new QFBResult(this);
+    return new QFBResult(this, dp->textCodec);
 }
 //-----------------------------------------------------------------------//
 bool QFBDriver::beginTransaction()
