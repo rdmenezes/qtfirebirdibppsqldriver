@@ -30,3 +30,6 @@ SOURCES += src/main.cpp \
     src/qsql_ibpp.cpp
 include(./ibpp2531/ibpp.pri) # +=   IBPP
 contains(QT_CONFIG, reduce_exports):CONFIG += hide_symbols  # +=   hide_symbols
+
+target.path     += $$[QT_INSTALL_PLUGINS]/sqldrivers
+INSTALLS        += target
