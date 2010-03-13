@@ -1082,7 +1082,7 @@ bool QFBDriver::open(const QString & db,
 
     if (!dp->textCodec)
         dp->textCodec = QTextCodec::codecForLocale(); //if unknown set locale
-    qDebug()<<dp->textCodec->name();
+
     try
     {
         dp->iDb=IBPP::DatabaseFactory(host.toStdString(),
