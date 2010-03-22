@@ -1,3 +1,22 @@
+March 22, 2010: 0.17.1
+- change conversions between Firebird and Qt
+      "ASCII"       = "ISO 8859-1"
+      "BIG_5"       = "Big5"
+      "CYRL"        = "IBM 866"
+      "DOS850"      = "IBM 850"
+      "DOS866"      = "IBM 866"
+      "KOI8-R"      = "KOI8-R"
+      "KOI8-U"      = "KOI8-U"
+      "EUCJ_0208"   = "JIS X 0208"
+      "GB_2312"     = "GB18030-0"
+      "ISO8859_[1-9, 13]"   = "ISO 8859-[1-9, 13]"
+      "KSC_5601"    = "Big5-HKSCS"
+      "SJIS_0208"   = "JIS X 0208"
+      "UNICODE_FSS" = "UTF-8"
+      "UTF8"        = "UTF-8"
+      "WIN125[0-8]"     = "Windows-125[1-8]"
+    else use QTextCodec::codecForLocale()
+
 March 13, 2010: 0.17
 + "make install" will copy driver to [QT_INSTALL_PLUGINS]/sqldrivers
 - fixed: character sets exception (Issue 8)
