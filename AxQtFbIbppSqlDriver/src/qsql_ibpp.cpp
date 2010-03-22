@@ -1010,15 +1010,19 @@ bool QFBDriver::open(const QString & db,
 //    set textCodec
     QByteArray codecName;
     if (charSet == QLatin1String("ASCII"))
-        codecName = "IBM 866";
+        codecName = "ISO 8859-1";
     else if (charSet == QLatin1String("BIG_5"))
         codecName = "Big5";
     else if (charSet == QLatin1String("CYRL"))
-        codecName = "KOI8-R";
+        codecName = "IBM 866";
     else if (charSet == QLatin1String("DOS850"))
         codecName = "IBM 850";
     else if (charSet == QLatin1String("DOS866"))
         codecName = "IBM 866";
+    else if (charSet == QLatin1String("KOI8-R"))
+        codecName = "KOI8-R";
+    else if (charSet == QLatin1String("KOI8-U"))
+        codecName = "KOI8-U";
     else if (charSet == QLatin1String("EUCJ_0208"))
         codecName = "JIS X 0208";
     else if (charSet == QLatin1String("GB_2312"))
@@ -1050,7 +1054,7 @@ bool QFBDriver::open(const QString & db,
     else if (charSet == QLatin1String("SJIS_0208"))
         codecName = "JIS X 0208";
     else if (charSet == QLatin1String("UNICODE_FSS"))
-        codecName = "UTF-32";
+        codecName = "UTF-8";
     else if (charSet == QLatin1String("UTF8"))
         codecName = "UTF-8";
 
